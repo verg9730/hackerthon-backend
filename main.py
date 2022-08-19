@@ -1,17 +1,21 @@
-from typing import Union
+from typing import List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, status, HTTPException
+import schemas, models
+from .database import engine, SessionLocal
+from sqlalchemy.orm import Session
+
 
 app = FastAPI()
 
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+models.Base.metadata.create_all(engine)
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    
+
