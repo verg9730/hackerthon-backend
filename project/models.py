@@ -10,8 +10,8 @@ from .database import Base
 association_table = Table(
     "association",
     Base.metadata,
-    Column("musics_id", ForeignKey("musics.id"), primary_key=True),
-    Column("sources_id", ForeignKey("sources.id"), primary_key=True),
+    Column("musics_id", Integer, ForeignKey("musics.id"), primary_key=True),
+    Column("sources_id", Integer, ForeignKey("sources.id"), primary_key=True),
 )
 
 class Musics(Base):
@@ -25,7 +25,7 @@ class Musics(Base):
     likes = Column(Integer)    # 좋아요 수
     plays = Column(Integer)    # 재생 수
     length = Column(Integer)   # 길이
-    used_sources = relationship("Sources", secondary=association_table, backref="musics")     # 사용한 소스
+    used_sources = relationship("Sources",viewonly=True, secondary=association_table, uselist=True, lazy='noload')     # 사용한 소스
     created_at = Column(DateTime, default=datetime.datetime.utcnow)     # 생성된 시간
 
 
@@ -40,7 +40,7 @@ class Sources(Base):
     inst = Column(String)     # 악기
     length = Column(Integer)   # 길이 단위는 second
     created_at = Column(DateTime, default=datetime.datetime.utcnow)       # 생성된 시간
-
+    used_to = relationship('Musics', secondary=association_table, lazy='noload')
 
 class Users(Base):
 

@@ -1,5 +1,5 @@
 from ssl import create_default_context
-from typing import Union
+from typing import Union, List
 import datetime
 from pydantic import BaseModel
 
@@ -15,7 +15,7 @@ class MusicCreate(MusicBase):
 
     link: str
     length: int
-    used_sources: int
+    used_sources: list[int]
 
     created_at : datetime.datetime
 
