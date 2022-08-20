@@ -1,20 +1,23 @@
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from . import models, schemas, database, images
 from .database import engine, SessionLocal
 from .images import image
 from sqlalchemy.orm import Session
 import os
-from os import getcwd
+from os import getcwd, remove
 from fastapi import FastAPI, Depends, status, HTTPException, File, UploadFile, Form
 from pprint import pprint
 from typing import Union, List
 from pydantic import BaseModel
 from .S3 import upload_file, handle_upload_mp3, handle_upload_img
-import shutil, random
+import shutil, random, requests
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Callable
 from sqlalchemy import inspect
+from pydub import AudioSegment
+
 
 
 app = FastAPI()
@@ -42,7 +45,7 @@ def hello():
 
 
 @app.post("/source")
-def save_source(upload_file: UploadFile, filename:str = Form(...), db:Session = Depends(get_db)):
+async def save_source(upload_file: UploadFile, filename:str = Form(...), db:Session = Depends(get_db)):
     try:
         suffix = Path(filename).suffix
         with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -65,13 +68,13 @@ def save_source(upload_file: UploadFile, filename:str = Form(...), db:Session = 
     return
 
 @app.get('/sources')
-def all_sources(db:Session = Depends(get_db)):
+async def all_sources(db:Session = Depends(get_db)):
 
     sources = db.query(models.Sources).all()
     return {"sources" : sources}
 
 @app.post("/music")
-def save_music(upload_file: UploadFile, filename: str = Form(...), db:Session = Depends(get_db)):
+async def save_music(upload_file: UploadFile, filename: str = Form(...), db:Session = Depends(get_db)):
     try:
         suffix = Path(upload_file.filename).suffix
         with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -95,13 +98,13 @@ def save_music(upload_file: UploadFile, filename: str = Form(...), db:Session = 
     return
 
 @app.get('/musics')
-def all_musics(db:Session = Depends(get_db)):
+async def all_musics(db:Session = Depends(get_db)):
     musics = db.query(models.Musics).all()
     return {"musics": musics}
 
 
 @app.post('/user', status_code=status.HTTP_201_CREATED)
-def create_user(request: schemas.User, db: Session = Depends(get_db)):
+async def create_user(request: schemas.User, db: Session = Depends(get_db)):
     new_user = models.Users(username=request.username)
     db.add(new_user)
     db.commit()
@@ -110,7 +113,44 @@ def create_user(request: schemas.User, db: Session = Depends(get_db)):
     return new_user
 
 @app.get('/users')
-def all_users(db:Session = Depends(get_db)):
+async def all_users(db:Session = Depends(get_db)):
     users = db.query(models.Users).all()
     return {'users': users}
 
+@app.get('/edit')
+async def get_record(ids : List(int), db: Session=Depends(get_db)):
+    sounds = range(len(ids))
+    
+    for i in range(len(ids)):
+
+        # 쿼리를 해서 url 주소를 받아 놓으면
+        URL = db.query(models.Sources.link).filter(models.Sources.id == ids[i]).first()
+        filename = db.query(models.Sources.title).filter(models.Sources.id == ids[i]).first()
+        # 거기서 response 얻어와서 byte 값 가져옴
+        response = requests.get(URL)
+
+        # 그걸 m4a 형태로 저장해 둠
+        open(f"{filename}.m4a", 'wb').write(response.content)
+
+        # wav로 전환
+        track = AudioSegment.from_file(f"{filename}.m4a", foramt='m4a')
+        file = track.export(f"{filename}.wav", format='wav')
+
+        # 다시 오디오 세그먼트로 wav 파일을 편집에 사용케 함. 
+        sound = AudioSegment.from_wav(f'{filename}.wav')
+
+        sounds[i] = sound
+
+        # m4a 로 저장해뒀던 파일은 다시 초기화.
+        remove(f"{filename}.m4a")
+    
+    overlapped = sounds[0].overlay(sounds[1], position=0)
+
+    for i in range(2, len(sounds)):
+        overlapped = overlapped.overlay(sounds[i], position=0)
+    
+    file_handle = overlapped.export('output.m4a', format="m4a")
+
+    # wav 파일도 지워야 하는데 어떡하지
+    
+    return FileResponse('output.m4a')
