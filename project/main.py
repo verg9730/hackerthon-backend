@@ -39,8 +39,8 @@ def all_musics(db:Session = Depends(get_db)):
 
 
 @app.post('/music')
-def create_music(request: schemas.MusicCreate, db: Session = Depends(get_db)):
-    new_music = models.Musics(title=request.title, maker=request.maker, link=request.link, created_at=request.created_at, length=request.length)
+async def create_music(request: schemas.MusicCreate, db: Session = Depends(get_db)):
+    new_music = models.Musics(title=request.title, maker=request.maker, link=request.link, used_sources=request.used_sources, created_at=request.created_at, length=request.length)
     db.add(new_music)
     db.commit
     db.refresh(new_music)
@@ -50,7 +50,7 @@ def create_music(request: schemas.MusicCreate, db: Session = Depends(get_db)):
 # source 생성
 # source schema 추가, models.Sources 에 들어가야 하는 속성 추가해야 함.
 @app.post('/source')
-def create_source(request: schemas.SrcReview, db: Session = Depends(get_db)):
+async def create_source(request: schemas.SrcReview, db: Session = Depends(get_db)):
     new_source = models.Sources()
     db.add(new_source)
     db.commit
