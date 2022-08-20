@@ -10,32 +10,46 @@ from pprint import pprint
 from typing import Union, List
 from pydantic import BaseModel
 from S3 import upload_file, handle_upload_mp3, handle_upload_img
-
+import shutil
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from typing import Callable
 app = FastAPI()
 
 models.Base.metadata.create_all(engine)
 
 @app.get("/")
 def hello():
-    return "hello"
+    return "yeah"
 
-# handle_upload_mp3("gun_sound")
-# handle_upload_img("man_mask")
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# @app.post('/source')
-# # def upload_source(file:UploadFile, name:str):
-# def upload_source(file:UploadFile):
-#     # contents = file.file.read()
-#     handle_upload_mp3(file)
-#     return file.filename
+@app.post("/source")
+def save_upload_file_tmp(upload_file: UploadFile):
+    try:
+        suffix = Path(upload_file.filename).suffix
+        with NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(upload_file.file, tmp)
+            tmp_path = Path(tmp.name).as_posix()
+            print(tmp_path)
+    finally:
+        upload_file.file.close()
+    handle_upload_mp3(str(tmp_path), filename="audio/"+upload_file.filename)
+
+    return
+
+# @app.get("/sources")
+# def get_sources():
+#     return
 
 
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
+
+
 
 # @app.get('/sources')
 # def get_sources(db: Session = Depends(get_db)):
@@ -108,7 +122,7 @@ def hello():
 #     db.refresh(new_user)
 #     return new_user
 
-# if __name__ == "__main__":
-#     import uvicorn
+if __name__ == "__main__":
+    import uvicorn
 
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

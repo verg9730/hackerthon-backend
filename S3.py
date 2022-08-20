@@ -31,16 +31,15 @@ def upload_file(location, file):
     except Exception as e :
         print(f"Another error => {e}")
 
-def handle_upload_mp3(f):
+def handle_upload_mp3(tmp_path, filename):
     s3_client = boto3.client('s3',
                             aws_access_key_id=ACCESS_KEY_ID,
                             aws_secret_access_key=ACCESS_SECRET_KEY)
     response = s3_client.upload_file(
-        'C:/Users/hs922/Desktop/hackerthon-backend/'+f+'.mp3', BUCKET_NAME, f+'.mp3')
+        tmp_path, BUCKET_NAME, filename)
 
-def handle_upload_img(f): # f = 파일명
+def handle_upload_img(f):
     data = open('C:/Users/hs922/Desktop/hackerthon-backend/'+f+'.jpg', 'rb')
-    # '로컬의 해당파일경로'+ 파일명 + 확장자
     s3 = boto3.resource(
         's3',
         aws_access_key_id=ACCESS_KEY_ID,
