@@ -3,9 +3,9 @@ import botocore
 from botocore.exceptions import ClientError
 from botocore.client import Config
 
-ACCESS_KEY_ID = "AKIAUGC2FVIMHZAKZPPL"
-ACCESS_SECRET_KEY = "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"
-BUCKET_NAME = "mymusic49848"
+ACCESS_KEY_ID = "AKIAYE23XINAVFCGBIYA"
+ACCESS_SECRET_KEY = "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"
+BUCKET_NAME = "musiczzzzzzz"
 """
 connect to S3
 """
