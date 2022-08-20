@@ -58,7 +58,7 @@ async def save_source(upload_file: UploadFile, filename:str = Form(...), db:Sess
     handle_upload_mp3(str(tmp_path), filename="audio/"+filename+".m4a")
 
     # 아래 링크들 확인 필요
-    img_link = image[random.randint(0,len(image))]
+    img_link = image[random.randint(0,len(image)-1)]
     link = f"https://mymusic49848.s3.ap-northeast-2.amazonaws.com/audio/{filename}.m4a"
     new_source = models.Sources(title=filename,link=link,img_link=img_link)
 
@@ -88,7 +88,7 @@ async def save_music(upload_file: UploadFile, filename: str = Form(...), db:Sess
     handle_upload_mp3(str(tmp_path), filename="audio/"+filename+".m4a")
 
     # 여기도 아래 링크들 확인 필요
-    img_link = image[random.randint(0,len(image))]
+    img_link = image[random.randint(0,len(image)-1)]
     link = f"https://mymusic49848.s3.ap-northeast-2.amazonaws.com/audio/{filename}.m4a"
     new_music = models.Musics(title=filename,link=link, img_link=img_link)
 
