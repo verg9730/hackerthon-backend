@@ -54,6 +54,7 @@ def save_source(upload_file: UploadFile, filename:str = Form(...), db:Session = 
     # 여기 아래의 upload_file.filename 고쳐도 되는지 확인 필요.
     handle_upload_mp3(str(tmp_path), filename="audio/"+upload_file.filename)
 
+    # 아래 링크들 확인 필요
     img_link = ""
     link = f"https://mymusic49848.s3.ap-northeast-2.amazonaws.com/audio/{filename}"
     new_source = models.Sources(title=filename,link=link,img_link=img_link)
@@ -79,7 +80,11 @@ def save_music(upload_file: UploadFile, db:Session = Depends(get_db)):
             print(tmp_path)
     finally:
         upload_file.file.close()
+
+    # 여기도 그냥 filename으로 받는지 확인 필요
     handle_upload_mp3(str(tmp_path), filename="audio/"+upload_file.filename)
+
+    # 여기도 아래 링크들 확인 필요
     img_link = "이미지 랜덤으로 2~3개 넣기"
     link = f"https://mymusic49848.s3.ap-northeast-2.amazonaws.com/audio/{upload_file.filename}"
     new_music = models.Musics(title=upload_file.filename,link=link, img_link=img_link)
@@ -108,5 +113,3 @@ def create_user(request: schemas.User, db: Session = Depends(get_db)):
 def all_users(db:Session = Depends(get_db)):
     users = db.query(models.Users).all()
     return {'users': users}
-
-
