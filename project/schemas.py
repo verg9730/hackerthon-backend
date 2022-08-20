@@ -25,7 +25,7 @@ class SrcBase(BaseModel):
 
 class User(BaseModel):
     username: str
-    profile: str
+    # profile: str
 
     class Config:
         orm_mode=True
