@@ -38,8 +38,8 @@ def handle_upload_mp3(tmp_path, filename):
     response = s3_client.upload_file(
         tmp_path, BUCKET_NAME, filename)
 
-def handle_upload_img(f):
-    data = open('C:/Users/hs922/Desktop/hackerthon-backend/'+f+'.jpg', 'rb')
+def handle_upload_img(tmp_path, filename):
+    data = open(tmp_path, 'rb')
     s3 = boto3.resource(
         's3',
         aws_access_key_id=ACCESS_KEY_ID,
@@ -47,4 +47,4 @@ def handle_upload_img(f):
         config=Config(signature_version='s3v4')
     )
     s3.Bucket(BUCKET_NAME).put_object(
-        Key=f, Body=data, ContentType='image/jpg')
+        Key=tmp_path, Body=data, ContentType='image/jpg')
