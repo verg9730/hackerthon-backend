@@ -4,7 +4,7 @@ from . import models, schemas, database, images
 from .database import engine, SessionLocal
 from .images import image
 from sqlalchemy.orm import Session
-import os
+import os, subprocess, ffmpeg
 from os import getcwd, remove
 from fastapi import FastAPI, Depends, status, HTTPException, File, UploadFile, Form
 from pprint import pprint
@@ -59,7 +59,7 @@ async def save_source(upload_file: UploadFile, filename:str = Form(...), db:Sess
 
     # 아래 링크들 확인 필요
     img_link = image[random.randint(0,len(image)-1)]
-    link = f"https://mymusic49848.s3.ap-northeast-2.amazonaws.com/audio/{filename}.m4a"
+    link = f"https://record777777.s3.ap-northeast-2.amazonaws.com/audio/{filename}.m4a"
     new_source = models.Sources(title=filename,link=link,img_link=img_link)
 
     db.add(new_source)
@@ -89,7 +89,7 @@ async def save_music(upload_file: UploadFile, filename: str = Form(...), db:Sess
 
     # 여기도 아래 링크들 확인 필요
     img_link = image[random.randint(0,len(image)-1)]
-    link = f"https://mymusic49848.s3.ap-northeast-2.amazonaws.com/audio/{filename}.m4a"
+    link = f"https://record777777.s3.ap-northeast-2.amazonaws.com/audio/{filename}.m4a"
     new_music = models.Musics(title=filename,link=link, img_link=img_link)
 
     db.add(new_music)
@@ -117,40 +117,40 @@ async def all_users(db:Session = Depends(get_db)):
     users = db.query(models.Users).all()
     return {'users': users}
 
-@app.get('/edit')
-async def get_record(ids : List(int), db: Session=Depends(get_db)):
-    sounds = range(len(ids))
+@app.post('/edit')
+async def get_record(ids : list[int], db: Session=Depends(get_db)):
+    sounds = []
     
     for i in range(len(ids)):
 
         # 쿼리를 해서 url 주소를 받아 놓으면
-        URL = db.query(models.Sources.link).filter(models.Sources.id == ids[i]).first()
-        filename = db.query(models.Sources.title).filter(models.Sources.id == ids[i]).first()
+        URL = db.query(models.Sources.link).filter(models.Sources.id == ids[i]).first()._asdict()['link']
+        filename = db.query(models.Sources.title).filter(models.Sources.id == ids[i]).first()._asdict()['title']
         # 거기서 response 얻어와서 byte 값 가져옴
         response = requests.get(URL)
 
-        # 그걸 m4a 형태로 저장해 둠
+        # 그걸 m4a 형태로 저장해 둠 
         open(f"{filename}.m4a", 'wb').write(response.content)
 
         # wav로 전환
-        track = AudioSegment.from_file(f"{filename}.m4a", foramt='m4a')
-        file = track.export(f"{filename}.wav", format='wav')
+        # track = AudioSegment.from_file(f"./{filename}.m4a", foramt='m4a')
+        # file = track.export(f"./{filename}.wav", format='wav')
+
+        subprocess.call(['ffmpeg', '-i', f'{filename}.m4a', f'{filename}.wav'])
 
         # 다시 오디오 세그먼트로 wav 파일을 편집에 사용케 함. 
         sound = AudioSegment.from_wav(f'{filename}.wav')
-
-        sounds[i] = sound
+        sounds.append(sound)
 
         # m4a 로 저장해뒀던 파일은 다시 초기화.
         remove(f"{filename}.m4a")
     
-    overlapped = sounds[0].overlay(sounds[1], position=0)
-
-    for i in range(2, len(sounds)):
-        overlapped = overlapped.overlay(sounds[i], position=0)
+    overlapped = sound[0].overlay(sound[1], position=0)
+    overlapped = overlapped.overlay(sound[2], position=0)
     
-    file_handle = overlapped.export('output.m4a', format="m4a")
+    file_handle = overlapped.export('output.wav', format="wav")
 
     # wav 파일도 지워야 하는데 어떡하지
-    
+    subprocess.call(['ffmpeg', '-i', f'{filename}.wav', f'{filename}.m4a'])
+
     return FileResponse('output.m4a')

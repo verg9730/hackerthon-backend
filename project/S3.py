@@ -3,9 +3,9 @@ import botocore
 from botocore.exceptions import ClientError
 from botocore.client import Config
 
-ACCESS_KEY_ID = "AKIAYE23XINAVFCGBIYA"
-ACCESS_SECRET_KEY = "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"
-BUCKET_NAME = "musiczzzzzzz"
+ACCESS_KEY_ID = "AKIA32SDCEOFZ7TWZU2L"
+ACCESS_SECRET_KEY = "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"
+BUCKET_NAME = "record777777"
 """
 connect to S3
 """
@@ -24,7 +24,7 @@ def upload_file(location, file):
             location,
             BUCKET_NAME,
             file,
-            ExtraArgs={'ContentType': 'image/jpeg'}
+            ExtraArgs={'ContentType': 'image/jpeg','ACL': "public-read"}
         )
     except ClientError as e :
         print(f'Credential error => {e}')
