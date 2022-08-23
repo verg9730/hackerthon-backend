@@ -2,3 +2,4 @@
 __pycache__
 app.db
 music_keypair.pem
+fastapi/

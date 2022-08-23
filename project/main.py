@@ -18,7 +18,7 @@ from typing import Callable
 from sqlalchemy import inspect
 from pydub import AudioSegment
 from pydub.playback import play
-
+from pydantic import BaseModel
 
 
 app = FastAPI()
@@ -118,9 +118,15 @@ async def all_users(db:Session = Depends(get_db)):
     users = db.query(models.Users).all()
     return {'users': users}
 
+class Edit(BaseModel):
+    ids:list[int]
+    filename:str
+
 @app.post('/edit')
-async def get_record(ids : list[int], filename: str, db: Session=Depends(get_db)):
+async def get_record(edit:Edit, db: Session=Depends(get_db)):
     sounds = []
+    ids = edit.ids
+    filename = edit.filename
     
     for i in range(len(ids)):
 
@@ -173,9 +179,9 @@ async def get_record(ids : list[int], filename: str, db: Session=Depends(get_db)
     db.add(new_source)
     db.commit()
     db.refresh(new_source)
-    remove('0.wav')
-    remove('1.wav')
-    remove('2.wav')
+
+    for i in range(len(ids)):
+        remove(f'{i}.wav')
     remove(f'{filename}.wav')
     remove(f'{filename}.m4a')
     return
